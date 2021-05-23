@@ -19,6 +19,8 @@ But it is not limited to these, users can use the source code to expand its func
 The source codes are written in ANSI C/C++, which are cross-platform and can be compiled on Windows, Linux/Unix and Mac OS. NOTE: Double-clicking the executable program does not work for data downloading. The correct way is to type ‘run_GAMP_GOOD  gamp_good.cfg’ on the terminal.
 # How to use it
 Please download GAMP II - GOOD Users Guide FROM https://github.com/zhouforme0318/GAMPII-GOOD/tree/master/Doc. The detailed description of how to use GAMP II - GOOD can be found in the document.
+# Attention!
+If some GNSS data cannot be successfully downloaded, check your network first. Then, check if the file exists on the remote server. Finally, rerun ‘run_GAMP_GOOD  gamp_good.cfg’ to try again. Don’t worry, once the data has been downloaded, it will not be downloaded repeatedly.
 # Acknowledgments
 - Dr Cheng Wang @ BUAA provided the C++ code for observation downloading as reference
 - the suggestion of adding the option of the day before and after the current day for precise satellite orbit and clock products downloading is provide by Zan Liu @ CUMT
