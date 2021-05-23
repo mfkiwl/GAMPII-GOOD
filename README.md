@@ -11,6 +11,7 @@ Main feature of GAMP II - GOOD are various GNSS observations and products donwlo
 - CODE and/or MGEX differential code bias (DCB)
 - global ionosphere map (GIM)
 - rate of TEC index (ROTI)
+- CODE and/or IGS tropospheric product
 - real-time precise orbit and clock products from CNES offline files
 - real-time code and phase bias products from CNES offline files
 - ANTEX format antenna phase center correction
