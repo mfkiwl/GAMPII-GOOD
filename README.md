@@ -15,3 +15,13 @@ Main feature of GAMP II - GOOD are various GNSS observations and products donwlo
 - real-time code and phase bias products from CNES offline files
 - ANTEX format antenna phase center correction
 But it is not limited to these, users can use the source code to expand its functionalities according to their needs.
+# Install
+The source codes are written in ANSI C/C++, which are cross-platform and can be compiled on Windows, Linux/Unix and Mac OS. NOTE: Double-clicking the executable program does not work for data downloading. The correct way is to type ‘run_GAMP_GOOD  gamp_good.cfg’ on the terminal.
+# How to use it
+Please download GAMP II - GOOD Users Guide FROM https://github.com/zhouforme0318/GAMPII-GOOD/tree/master/Doc. The detailed description of how to use GAMP II - GOOD can be found in the document.
+# Acknowledgments
+- Dr Cheng Wang @ BUAA provided the C++ code for observation downloading as reference
+- the suggestion of adding the option of the day before and after the current day for precise satellite orbit and clock products downloading is provide by Zan Liu @ CUMT
+- the suggestion of adding the option of the full path of third-party softwares is provide by Yudan Yi
+- the suggestion of adding the option of rate of TEC index (ROTI) is provide by Lei Liu @ WHU
+- the suggestion of adding the option of IGR, IGU, GFU (from GFZ), and WUU (from WHU) products as well as the site-specific broadcast ephemeris is provide by Menghao Li @ HEU
