@@ -24,6 +24,7 @@ If some GNSS data cannot be successfully downloaded, check your network first. T
 # Acknowledgments
 - Dr Cheng Wang @ BUAA provided the C++ code for observation downloading as reference
 - the suggestion of adding the option of the day before and after the current day for precise satellite orbit and clock products downloading is provide by Zan Liu @ CUMT
-- the suggestion of adding the option of the full path of third-party softwares is provide by Yudan Yi
+- the suggestion of adding the option of the full path of third-party softwares is provide by Dr Yudan Yi
 - the suggestion of adding the option of rate of TEC index (ROTI) is provide by Lei Liu @ WHU
+- the suggestion of adding the option of 'printInfoWget' in configure file for (not) printing the information of running 'wget' by Dr Hong Hu @ AHU
 - the suggestion of adding the option of IGR, IGU, GFU (from GFZ), and WUU (from WHU) products as well as the site-specific broadcast ephemeris is provide by Menghao Li @ HEU
