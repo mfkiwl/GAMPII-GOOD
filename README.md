@@ -30,4 +30,4 @@ If some GNSS data cannot be successfully downloaded, check your network first. T
 - the suggestion of adding the option of 'printInfoWget' in configure file for (not) printing the information of running 'wget' by Dr Hong Hu @ AHU
 - the suggestion of adding the option of IGR, IGU, GFU (from GFZ), and WUU (from WHU) products as well as the site-specific broadcast ephemeris is provide by Menghao Li @ HEU
 # License
-Copyright (C) 2021 by SpAtial SurveyIng and Navigation (SASIN) Group at Shandong University of Science and Technology (SDUST), All rights reserved.
+Copyright (C) 2021 by SpAtial SurveyIng and Navigation (SASIN) Group at Shandong University of Science and Technology (SDUST), all rights reserved.
