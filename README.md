@@ -1,4 +1,4 @@
-# GAMPII-GOOD
+# GAMP II - GOOD
 GAMP II - GOOD (Gnss Observations and prOducts Downloader) is a powerful and easy-to-use lightweight GNSS observations and product downloading toolkit, which is developed by the SASIN (SpAtial SurveyIng and Navigation) group at Shandong University of Science and Technology (SDUST). The current version is 1.6, which is more stable. Hence, we decide to make it available for global GNSS users, and we are convinced that more and more GNSS users will benefit from GAMP II - GOOD. The source codes of GAMP II - GOOD is now available at GitHub (https://github.com/zhouforme0318/GAMPII-GOOD). We dedicated to create a more powerful GNSS data downloading tool, which can allow every GNSSer to completely get rid of the trouble in GNSS data and product downloading.
 # Features
 Main feature of GAMP II - GOOD are various GNSS observations and products donwloading, i.e., 
@@ -29,3 +29,5 @@ If some GNSS data cannot be successfully downloaded, check your network first. T
 - the suggestion of adding the option of rate of TEC index (ROTI) is provide by Lei Liu @ WHU
 - the suggestion of adding the option of 'printInfoWget' in configure file for (not) printing the information of running 'wget' by Dr Hong Hu @ AHU
 - the suggestion of adding the option of IGR, IGU, GFU (from GFZ), and WUU (from WHU) products as well as the site-specific broadcast ephemeris is provide by Menghao Li @ HEU
+# License
+Copyright (C) 2021 by SpAtial SurveyIng and Navigation (SASIN) Group at Shandong University of Science and Technology (SDUST), All rights reserved.
