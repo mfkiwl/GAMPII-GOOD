@@ -25,10 +25,10 @@ But it is not limited to these, users can use the source code to expand its func
   2021/04/30 the day before and after the current day for precise satellite orbit and clock products downloading is added
 - Vers. 1.2  
   2021/04/30 CNES real-time orbit, clock, bias files (in offline mode) option added  
-  2021/05/01 from DOY 345/2020, "brdcDDD0.YYn" was converted from "*.Z" to "*.gz"  
+  2021/05/01 from DOY 345/2020, 'brdcDDD0.YYn' was converted from '*.Z' to '*.gz'  
   2021/05/01 added the full path of third-party softwares
 - Vers. 1.3  
-  2021/05/05 add "GetRoti" for rate of TEC index (ROTI) file downloading
+  2021/05/05 add 'GetRoti' for rate of TEC index (ROTI) file downloading
 - Vers. 1.4  
   2021/05/06 add the compatibility for changing directory (chdir) in Windows and Linux OS  
   2021/05/07 add the option 'printInfoWget' in configure file for (not) printing the information of running 'wget'  
