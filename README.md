@@ -38,7 +38,7 @@ But it is not limited to these, users can use the source code to expand its func
   2021/05/12 add the option for IGR, IGU, GFU (from GFZ), and WUU (from WHU) products as well as the site-specific broadcast ephemeris files downloading  
   2021/05/15 sub-directory (i.e., daily, hourly, and highrate) creation for observation downloading
 - Vers. 1.6  
-  2021/05/18 modify some codes to make configuration file and program look more concise
+  2021/05/18 modify some codes to make configuration file and program look more concise  
   2021/05/21 add the extraction and conversion for the 'all' option in IGS and MGEX observation downloading
 # Install
 The source codes are written in ANSI C/C++, which are cross-platform and can be compiled on Windows, Linux/Unix and Mac OS. NOTE: Double-clicking the executable program does not work for data downloading. The correct way is to type ‘run_GAMP_GOOD  gamp_good.cfg’ on the terminal.
