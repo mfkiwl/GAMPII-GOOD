@@ -23,8 +23,23 @@ But it is not limited to these, users can use the source code to expand its func
 - Vers. 1.1  
   2021/04/23 IGN and WHU FPT archives added  
   2021/04/30 the day before and after the current day for precise satellite orbit and clock products downloading is added
-- Vers. 1.2
-
+- Vers. 1.2  
+  2021/04/30 CNES real-time orbit, clock, bias files (in offline mode) option added  
+  2021/05/01 from DOY 345/2020, "brdcDDD0.YYn" was converted from "*.Z" to "*.gz"  
+  2021/05/01 added the full path of third-party softwares
+- Vers. 1.3  
+  2021/05/05 add "GetRoti" for Rate of TEC index (ROTI) file downloading
+- Vers. 1.4  
+  2021/05/06 add the compatibility for changing directory (chdir) in Windows and Linux OS  
+  2021/05/07 add the option 'printInfoWget' in configure file for (not) printing the information of running 'wget'  
+  2021/05/08 add IGS and MGEX hourly observation (30s) downloading
+- Vers. 1.5  
+  2021/05/10 modify some codes to make GOOD adaptable to different compression form (i.e., '*.Z' or '*.gz')  
+  2021/05/12 add the option for IGR, IGU, GFU (from GFZ), and WUU (from WHU) products as well as the site-specific broadcast ephemeris files downloading  
+  2021/05/15 sub-directory (i.e., daily, hourly, and highrate) creation for observation downloading
+- Vers. 1.6  
+  2021/05/18 modify some codes to make configuration file and program look more concise
+  2021/05/21 add the extraction and conversion for the 'all' option in IGS and MGEX observation downloading
 # Install
 The source codes are written in ANSI C/C++, which are cross-platform and can be compiled on Windows, Linux/Unix and Mac OS. NOTE: Double-clicking the executable program does not work for data downloading. The correct way is to type ‘run_GAMP_GOOD  gamp_good.cfg’ on the terminal.
 # How to use it
