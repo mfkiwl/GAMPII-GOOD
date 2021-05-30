@@ -21,7 +21,10 @@ But it is not limited to these, users can use the source code to expand its func
   2021/04/16 new  
   2021/04/20 MGEX multi-GNSS precise products option added  
 - Vers. 1.1  
-  2021/04/23 IGN and WHU FPT archives added
+  2021/04/23 IGN and WHU FPT archives added  
+  2021/04/30 the day before and after the current day for precise satellite orbit and clock products downloading is added
+- Vers. 1.2
+
 # Install
 The source codes are written in ANSI C/C++, which are cross-platform and can be compiled on Windows, Linux/Unix and Mac OS. NOTE: Double-clicking the executable program does not work for data downloading. The correct way is to type ‘run_GAMP_GOOD  gamp_good.cfg’ on the terminal.
 # How to use it
