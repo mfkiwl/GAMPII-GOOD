@@ -16,6 +16,10 @@ Main feature of GAMP II - GOOD are various GNSS observations and products donwlo
 - real-time code and phase bias products from CNES offline files
 - ANTEX format antenna phase center correction
 But it is not limited to these, users can use the source code to expand its functionalities according to their needs.
+# Version
+- Vers. 1.0
+  2021/04/16 new
+  2021/04/20 MGEX multi-GNSS precise products option added
 # Install
 The source codes are written in ANSI C/C++, which are cross-platform and can be compiled on Windows, Linux/Unix and Mac OS. NOTE: Double-clicking the executable program does not work for data downloading. The correct way is to type ‘run_GAMP_GOOD  gamp_good.cfg’ on the terminal.
 # How to use it
