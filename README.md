@@ -40,6 +40,8 @@ But it is not limited to these, users can use the source code to expand its func
 - Vers. 1.6  
   2021/05/18 modify some codes to make configuration file and program look more concise  
   2021/05/21 add the extraction and conversion for the 'all' option in IGS and MGEX observation downloading
+- Vers. 1.7  
+  It is on the way ...
 # Install
 The source codes are written in ANSI C/C++, which are cross-platform and can be compiled on Windows, Linux/Unix and Mac OS. NOTE: Double-clicking the executable program does not work for data downloading. The correct way is to type ‘run_GAMP_GOOD  gamp_good.cfg’ on the terminal.
 # How to use it
