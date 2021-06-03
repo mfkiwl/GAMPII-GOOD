@@ -13,9 +13,9 @@
 *           2021/04/30      the day before and after the current day for precise satellite 
                                orbit and clock products downloading is added (by Feng Zhou @ SDUST and Zan Liu @ CUMT)
 *           2021/04/30 1.2  CNES real-time orbit, clock, bias files (in offline mode) option added (by Feng Zhou @ SDUST)
-*           2021/05/01      from DOY 345/2020, "brdcDDD0.YYn" was converted from "*.Z" to "*.gz" (by Feng Zhou @ SDUST and Zan Liu @ CUMT)
+*           2021/05/01      from DOY 345/2020, 'brdcDDD0.YYn' was converted from '*.Z' to '*.gz' (by Feng Zhou @ SDUST and Zan Liu @ CUMT)
 *           2021/05/01      added the full path of third-party softwares (by Feng Zhou @ SDUST and Yudan Yi)
-*           2021/05/05 1.3  add "GetRoti" for Rate of TEC index (ROTI) file downloading (by Feng Zhou @ SDUST and Lei Liu @ WHU)
+*           2021/05/05 1.3  add 'GetRoti' for Rate of TEC index (ROTI) file downloading (by Feng Zhou @ SDUST and Lei Liu @ WHU)
 *           2021/05/06 1.4  add the compatibility for changing directory (chdir) in Windows and Linux OS (by Feng Zhou @ SDUST)
 *           2021/05/07      add the option 'printInfoWget' in configure file for (not) printing the information of running 'wget' (by Feng Zhou @ SDUST and Hong Hu @ AHU)
 *           2021/05/08      add IGS and MGEX hourly observation (30s) downloading (by Feng Zhou @ SDUST and Menghao Li @ HEU)
@@ -24,6 +24,7 @@
 *           2021/05/15      sub-directory (i.e., daily, hourly, and highrate) creation for observation downloading (by Feng Zhou @ SDUST and Menghao Li @ HEU)
 *           2021/05/18 1.6  modify some codes to make configuration file and program look more concise (by Feng Zhou @ SDUST and Menghao Li @ HEU)
 *           2021/05/21      add the extraction and conversion for the 'all' option in IGS and MGEX observation downloading (by Feng Zhou @ SDUST)
+*           2021/06/01 1.7  add 'getObc', 'getObg', and 'getObh' options for Curtin University of Technology (CUT), Geoscience Australia (GA), and Hong Kong CORS observation downloading (by Feng Zhou @ SDUST)
 *-----------------------------------------------------------------------------*/
 #include "Good.h"
 #include "TimeUtil.h"
@@ -884,7 +885,7 @@ void FtpUtil::GetDailyObsMgex(gtime_t ts, const char dir[], const ftpopt_t *fopt
             if (access(crxFiles[i].c_str(), 0) == 0)
             {
                 /* extract it */
-                cmd = gzipFull + "  -d -f " + crxFiles[i];
+                cmd = gzipFull + " -d -f " + crxFiles[i];
                 std::system(cmd.c_str());
 
                 str.StrMid(sitName, crxFiles[i].c_str(), 0, 4);
@@ -1109,7 +1110,7 @@ void FtpUtil::GetHourlyObsMgex(gtime_t ts, const char dir[], const ftpopt_t *fop
                 if (access(crxFiles[i].c_str(), 0) == 0)
                 {
                     /* extract it */
-                    cmd = gzipFull + "  -d -f " + crxFiles[i];
+                    cmd = gzipFull + " -d -f " + crxFiles[i];
                     std::system(cmd.c_str());
 
                     str.StrMid(sitName, crxFiles[i].c_str(), 0, 4);
@@ -1344,7 +1345,7 @@ void FtpUtil::GetHrObsMgex(gtime_t ts, const char dir[], const ftpopt_t *fopt)
             string crxFile = "*_R_*_15M_01S_MO.crx";
             string crxxFile = crxFile + ".*";
             string cmd = wgetFull + " " + qr + " -nH -A " + crxxFile + cutDirs + url;
-            //std::system(cmd.c_str());
+            std::system(cmd.c_str());
 
             /* 'a' = 97, 'b' = 98, ... */
             int ii = fopt->hhObm[i] + 97;
@@ -1365,7 +1366,7 @@ void FtpUtil::GetHrObsMgex(gtime_t ts, const char dir[], const ftpopt_t *fopt)
                     if (access(crxFiles[j].c_str(), 0) == 0)
                     {
                         /* extract it */
-                        cmd = gzipFull + "  -d -f " + crxFiles[j];
+                        cmd = gzipFull + " -d -f " + crxFiles[j];
                         std::system(cmd.c_str());
 
                         str.StrMid(sitName, crxFiles[j].c_str(), 0, 4);
@@ -1523,6 +1524,1118 @@ void FtpUtil::GetHrObsMgex(gtime_t ts, const char dir[], const ftpopt_t *fopt)
         }
     }
 } /* end of GetHrObsMgex */
+
+/**
+* @brief   : GetDailyObsCut - download Curtin University of Technology (CUT) RINEX daily observation (30s) files (long name "crx") according to 'site.list' file
+* @param[I]: ts (start time)
+* @param[I]: dir (data directory)
+* @param[I]: fopt (FTP options)
+* @param[O]: none
+* @return  : none
+* @note    :
+**/
+void FtpUtil::GetDailyObsCut(gtime_t ts, const char dir[], const ftpopt_t *fopt)
+{
+    /* creation of sub-directory ('daily') */
+    char tmpDir[MAXSTRPATH] = { '\0' };
+    char sep = (char)FILEPATHSEP;
+    sprintf(tmpDir, "%s%c%s", dir, sep, "daily");
+    string subDir = tmpDir;
+    if (access(subDir.c_str(), 0) == -1)
+    {
+        /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+        string cmd = "mkdir " + subDir;
+#else           /* for Linux or Mac */
+        string cmd = "mkdir -p " + subDir;
+#endif
+        std::system(cmd.c_str());
+    }
+
+    /* change directory */
+#ifdef _WIN32   /* for Windows */
+    _chdir(subDir.c_str());
+#else           /* for Linux or Mac */
+    chdir(subDir.c_str());
+#endif
+
+    /* compute day of year */
+    TimeUtil tu;
+    int yyyy, doy;
+    tu.time2yrdoy(ts, &yyyy, &doy);
+    int yy = tu.yyyy2yy(yyyy);
+    StringUtil str;
+    string sYyyy = str.yyyy2str(yyyy);
+    string sYy = str.yy2str(yy);
+    string sDoy = str.doy2str(doy);
+
+    string wgetFull = fopt->wgetFull, gzipFull = fopt->gzipFull, crx2rnxFull = fopt->crx2rnxFull, qr = fopt->qr;
+    string url = "http://saegnss2.curtin.edu/ldc/rinex3/daily/" + sYyyy + "/" + sDoy;
+    string cutDirs = " --cut-dirs=5 ";
+    /* download the Curtin University of Technology (CUT) observation file site-by-site */
+    if (access(fopt->obcOpt, 0) == 0)
+    {
+        ifstream sitLst(fopt->obcOpt);
+        if (!sitLst.is_open())
+        {
+            cerr << "*** ERROR(FtpUtil::GetDailyObsCut): open site.list = " << fopt->obcOpt << " file failed, please check it" << endl;
+
+            return;
+        }
+
+        string sitName;
+        while (getline(sitLst, sitName))
+        {
+            str.ToLower(sitName);
+            string oFile = sitName + sDoy + "0." + sYy + "o";
+            if (access(oFile.c_str(), 0) == -1)
+            {
+                /* it is OK for '*.gz' format */
+                str.ToUpper(sitName);
+                string crxFile = sitName + "00AUS_R_" + sYyyy + sDoy + "0000_01D_30S_MO.crx";
+                string crxgzFile = crxFile + ".gz";
+                string cmd = wgetFull + " " + qr + " -nH " + cutDirs + url + "/" + crxgzFile;
+                std::system(cmd.c_str());
+
+                /* extract '*.gz' */
+                cmd = gzipFull + " -d -f " + crxgzFile;
+                std::system(cmd.c_str());
+                if (access(crxFile.c_str(), 0) == -1)
+                {
+                    cout << "*** WARNING(FtpUtil::GetDailyObsCut): failed to download CUT daily observation file " << oFile << endl;
+
+                    continue;
+                }
+
+#ifdef _WIN32  /* for Windows */
+                cmd = crx2rnxFull + " " + crxFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                cmd = "cat " + crxFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                std::system(cmd.c_str());
+
+                if (access(oFile.c_str(), 0) == 0)
+                {
+                    cout << "*** INFO(FtpUtil::GetDailyObsCut): successfully download CUT daily observation file " << oFile << endl;
+
+                    /* delete crxFile */
+                    remove(crxFile.c_str());
+                }
+            }
+            else cout << "*** INFO(FtpUtil::GetDailyObsCut): CUT daily observation file " << oFile <<
+                " has existed!" << endl;
+        }
+
+        /* close 'site.list' */
+        sitLst.close();
+    }
+} /* end of GetDailyObsCut */
+
+/**
+* @brief   : GetDailyObsGa - download Geoscience Australia (GA) RINEX daily observation (30s) files (long name "crx") according to 'site.list' file
+* @param[I]: ts (start time)
+* @param[I]: dir (data directory)
+* @param[I]: fopt (FTP options)
+* @param[O]: none
+* @return  : none
+* @note    :
+**/
+void FtpUtil::GetDailyObsGa(gtime_t ts, const char dir[], const ftpopt_t *fopt)
+{
+    /* creation of sub-directory ('daily') */
+    char tmpDir[MAXSTRPATH] = { '\0' };
+    char sep = (char)FILEPATHSEP;
+    sprintf(tmpDir, "%s%c%s", dir, sep, "daily");
+    string subDir = tmpDir;
+    if (access(subDir.c_str(), 0) == -1)
+    {
+        /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+        string cmd = "mkdir " + subDir;
+#else           /* for Linux or Mac */
+        string cmd = "mkdir -p " + subDir;
+#endif
+        std::system(cmd.c_str());
+    }
+
+    /* change directory */
+#ifdef _WIN32   /* for Windows */
+    _chdir(subDir.c_str());
+#else           /* for Linux or Mac */
+    chdir(subDir.c_str());
+#endif
+
+    /* compute day of year */
+    TimeUtil tu;
+    int yyyy, doy;
+    tu.time2yrdoy(ts, &yyyy, &doy);
+    int yy = tu.yyyy2yy(yyyy);
+    StringUtil str;
+    string sYyyy = str.yyyy2str(yyyy);
+    string sYy = str.yy2str(yy);
+    string sDoy = str.doy2str(doy);
+
+    string wgetFull = fopt->wgetFull, gzipFull = fopt->gzipFull, crx2rnxFull = fopt->crx2rnxFull, qr = fopt->qr;
+    string url = "ftp://ftp.data.gnss.ga.gov.au/daily/" + sYyyy + "/" + sDoy;
+    string cutDirs = " --cut-dirs=3 ";
+    if (strlen(fopt->obgOpt) < 9)  /* the option of 'all' is selected; the length of "site.list" is nine */
+    {
+        /* it is OK for '*.gz' format */
+        string crxFile = "*_R_" + sYyyy + sDoy + "0000_01D_30S_MO.crx";
+        string crxgzFile = crxFile + ".gz";
+        string cmd = wgetFull + " " + qr + " -nH -A " + crxgzFile + cutDirs + url;
+        std::system(cmd.c_str());
+
+        /* get the file list */
+        string suffix = ".crx";
+        vector<string> crxFiles;
+        str.GetFilesAll(subDir, suffix, crxFiles);
+        char sitName[MAXCHARS];
+        for (int i = 0; i < crxFiles.size(); i++)
+        {
+            if (access(crxFiles[i].c_str(), 0) == 0)
+            {
+                /* extract it */
+                cmd = gzipFull + " -d -f " + crxFiles[i];
+                std::system(cmd.c_str());
+
+                str.StrMid(sitName, crxFiles[i].c_str(), 0, 4);
+                string site = sitName;
+                str.ToLower(site);
+                str.StrMid(sitName, crxFiles[i].c_str(), 0, (int)crxFiles[i].find_last_of('.'));
+                crxFile = sitName;
+                if (access(crxFile.c_str(), 0) == -1) continue;
+                string oFile = site + sDoy + "0." + sYy + "o";
+                /* convert from 'crx' file to 'o' file */
+#ifdef _WIN32  /* for Windows */
+                cmd = crx2rnxFull + " " + crxFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                cmd = "cat " + crxFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                std::system(cmd.c_str());
+
+                /* delete crxFile */
+#ifdef _WIN32   /* for Windows */
+                cmd = "del " + crxFile;
+#else           /* for Linux or Mac */
+                cmd = "rm -rf " + crxFile;
+#endif
+                std::system(cmd.c_str());
+            }
+        }
+    }
+    else  /* the option of full path of site list file is selected */
+    {
+        /* download the GA observation file site-by-site */
+        if (access(fopt->obgOpt, 0) == 0)
+        {
+            ifstream sitLst(fopt->obgOpt);
+            if (!sitLst.is_open())
+            {
+                cerr << "*** ERROR(FtpUtil::GetDailyObsGa): open site.list = " << fopt->obgOpt << " file failed, please check it" << endl;
+
+                return;
+            }
+
+            string sitName;
+            while (getline(sitLst, sitName))
+            {
+                str.ToLower(sitName);
+                string oFile = sitName + sDoy + "0." + sYy + "o";
+                string dFile = sitName + sDoy + "0." + sYy + "d";
+                if (access(oFile.c_str(), 0) == -1)
+                {
+                    /* it is OK for '*.gz' format */
+                    str.ToUpper(sitName);
+                    string crxFile = sitName + "*_R_" + sYyyy + sDoy + "0000_01D_30S_MO.crx";
+                    string crxgzFile = crxFile + ".gz";
+                    string cmd = wgetFull + " " + qr + " -nH -A " + crxgzFile + cutDirs + url;
+                    std::system(cmd.c_str());
+
+                    /* extract '*.gz' */
+                    cmd = gzipFull + " -d -f " + crxgzFile;
+                    std::system(cmd.c_str());
+                    string changeFileName;
+#ifdef _WIN32  /* for Windows */
+                    changeFileName = "rename";
+#else          /* for Linux or Mac */
+                    changeFileName = "mv";
+#endif
+                    cmd = changeFileName + " " + crxFile + " " + dFile;
+                    std::system(cmd.c_str());
+                    if (access(dFile.c_str(), 0) == -1)
+                    {
+                        cout << "*** WARNING(FtpUtil::GetDailyObsGa): failed to download GA daily observation file " << oFile << endl;
+
+                        continue;
+                    }
+
+#ifdef _WIN32  /* for Windows */
+                    cmd = crx2rnxFull + " " + dFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                    cmd = "cat " + dFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                    std::system(cmd.c_str());
+
+                    if (access(oFile.c_str(), 0) == 0)
+                    {
+                        cout << "*** INFO(FtpUtil::GetDailyObsGa): successfully download GA daily observation file " << oFile << endl;
+
+                        /* delete dFile */
+                        remove(dFile.c_str());
+                    }
+                }
+                else cout << "*** INFO(FtpUtil::GetDailyObsGa): GA daily observation file " << oFile <<
+                    " has existed!" << endl;
+            }
+
+            /* close 'site.list' */
+            sitLst.close();
+        }
+    }
+} /* end of GetDailyObsGa */
+
+/**
+* @brief   : GetHourlyObsGa - download Geoscience Australia (GA) RINEX hourly observation (30s) files (long name "crx") according to 'site.list' file
+* @param[I]: ts (start time)
+* @param[I]: dir (data directory)
+* @param[I]: fopt (FTP options)
+* @param[O]: none
+* @return  : none
+* @note    :
+**/
+void FtpUtil::GetHourlyObsGa(gtime_t ts, const char dir[], const ftpopt_t *fopt)
+{
+    /* creation of sub-directory ('hourly') */
+    char tmpDir[MAXSTRPATH] = { '\0' };
+    char sep = (char)FILEPATHSEP;
+    sprintf(tmpDir, "%s%c%s", dir, sep, "hourly");
+    string subDir = tmpDir;
+    if (access(subDir.c_str(), 0) == -1)
+    {
+        /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+        string cmd = "mkdir " + subDir;
+#else           /* for Linux or Mac */
+        string cmd = "mkdir -p " + subDir;
+#endif
+        std::system(cmd.c_str());
+    }
+
+    /* compute day of year */
+    TimeUtil tu;
+    int yyyy, doy;
+    tu.time2yrdoy(ts, &yyyy, &doy);
+    int yy = tu.yyyy2yy(yyyy);
+    StringUtil str;
+    string sYyyy = str.yyyy2str(yyyy);
+    string sYy = str.yy2str(yy);
+    string sDoy = str.doy2str(doy);
+
+    string wgetFull = fopt->wgetFull, gzipFull = fopt->gzipFull, crx2rnxFull = fopt->crx2rnxFull, qr = fopt->qr;
+    string url0 = "ftp://ftp.data.gnss.ga.gov.au/hourly/" + sYyyy + "/" + sDoy;
+    string cutDirs = " --cut-dirs=4 ";
+    if (strlen(fopt->obgOpt) < 9)  /* the option of 'all' is selected; the length of "site.list" is nine */
+    {
+        /* download all the GA observation files */
+        for (int i = 0; i < fopt->hhObg.size(); i++)
+        {
+            string sHh = str.hh2str(fopt->hhObg[i]);
+            char tmpDir[MAXSTRPATH] = { '\0' };
+            char sep = (char)FILEPATHSEP;
+            sprintf(tmpDir, "%s%c%s", subDir.c_str(), sep, sHh.c_str());
+            string sHhDir = tmpDir;
+            if (access(sHhDir.c_str(), 0) == -1)
+            {
+                /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+                string cmd = "mkdir " + sHhDir;
+#else           /* for Linux or Mac */
+                string cmd = "mkdir -p " + sHhDir;
+#endif
+                std::system(cmd.c_str());
+            }
+
+            /* change directory */
+#ifdef _WIN32   /* for Windows */
+            _chdir(sHhDir.c_str());
+#else           /* for Linux or Mac */
+            chdir(sHhDir.c_str());
+#endif
+
+            string url = url0 + "/" + sHh;
+            /* it is OK for '*.gz' format */
+            string crxFile = "*_R_" + sYyyy + sDoy + sHh + "00_01H_30S_MO.crx";
+            string crxgzFile = crxFile + ".gz";
+            string cmd = wgetFull + " " + qr + " -nH -A " + crxgzFile + cutDirs + url;
+            std::system(cmd.c_str());
+
+            /* 'a' = 97, 'b' = 98, ... */
+            int ii = fopt->hhObg[i] + 97;
+            char ch = ii;
+            string sch;
+            sch.push_back(ch);
+
+            /* get the file list */
+            string suffix = ".crx";
+            vector<string> crxFiles;
+            str.GetFilesAll(sHhDir, suffix, crxFiles);
+            char sitName[MAXCHARS];
+            for (int i = 0; i < crxFiles.size(); i++)
+            {
+                if (access(crxFiles[i].c_str(), 0) == 0)
+                {
+                    /* extract it */
+                    cmd = gzipFull + "  -d -f " + crxFiles[i];
+                    std::system(cmd.c_str());
+
+                    str.StrMid(sitName, crxFiles[i].c_str(), 0, 4);
+                    string site = sitName;
+                    str.ToLower(site);
+                    str.StrMid(sitName, crxFiles[i].c_str(), 0, (int)crxFiles[i].find_last_of('.'));
+                    crxFile = sitName;
+                    if (access(crxFile.c_str(), 0) == -1) continue;
+                    string oFile = site + sDoy + sch + "." + sYy + "o";
+                    /* convert from 'd' file to 'o' file */
+#ifdef _WIN32  /* for Windows */
+                    cmd = crx2rnxFull + " " + crxFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                    cmd = "cat " + crxFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                    std::system(cmd.c_str());
+
+                    /* delete 'd' file */
+#ifdef _WIN32   /* for Windows */
+                    cmd = "del " + crxFile;
+#else           /* for Linux or Mac */
+                    cmd = "rm -rf " + crxFile;
+#endif
+                    std::system(cmd.c_str());
+                }
+            }
+        }
+    }
+    else  /* the option of full path of site list file is selected */
+    {
+        /* download the GA observation file site-by-site */
+        if (access(fopt->obgOpt, 0) == 0)
+        {
+            ifstream sitLst(fopt->obgOpt);
+            if (!sitLst.is_open())
+            {
+                cerr << "*** ERROR(FtpUtil::GetHourlyObsGa): open site.list = " << fopt->obgOpt << " file failed, please check it" << endl;
+
+                return;
+            }
+
+            string sitName;
+            while (getline(sitLst, sitName))
+            {
+                for (int i = 0; i < fopt->hhObg.size(); i++)
+                {
+                    string sHh = str.hh2str(fopt->hhObg[i]);
+                    char tmpDir[MAXSTRPATH] = { '\0' };
+                    char sep = (char)FILEPATHSEP;
+                    sprintf(tmpDir, "%s%c%s", subDir.c_str(), sep, sHh.c_str());
+                    string sHhDir = tmpDir;
+                    if (access(sHhDir.c_str(), 0) == -1)
+                    {
+                        /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+                        string cmd = "mkdir " + sHhDir;
+#else           /* for Linux or Mac */
+                        string cmd = "mkdir -p " + sHhDir;
+#endif
+                        std::system(cmd.c_str());
+                    }
+
+                    /* change directory */
+#ifdef _WIN32   /* for Windows */
+                    _chdir(sHhDir.c_str());
+#else           /* for Linux or Mac */
+                    chdir(sHhDir.c_str());
+#endif
+
+                    /* 'a' = 97, 'b' = 98, ... */
+                    int ii = fopt->hhObg[i] + 97;
+                    char ch = ii;
+                    string sch;
+                    sch.push_back(ch);
+                    str.ToLower(sitName);
+                    string oFile = sitName + sDoy + sch + "." + sYy + "o";
+                    string dFile = sitName + sDoy + sch + "." + sYy + "d";
+                    if (access(oFile.c_str(), 0) == -1 && access(dFile.c_str(), 0) == -1)
+                    {
+                        string url = url0 + "/" + sHh;
+                        /* it is OK for '*.gz' format */
+                        str.ToUpper(sitName);
+                        string crxFile = sitName + "*_R_" + sYyyy + sDoy + sHh + "00_01H_30S_MO.crx";
+                        string crxxFile = crxFile + ".*";
+                        string cmd = wgetFull + " " + qr + " -nH -A " + crxxFile + cutDirs + url;
+                        std::system(cmd.c_str());
+
+                        /* extract '*.gz' */
+                        string crxgzFile = crxFile + ".gz";
+                        cmd = gzipFull + " -d -f " + crxgzFile;
+                        std::system(cmd.c_str());
+                        string changeFileName;
+#ifdef _WIN32  /* for Windows */
+                        changeFileName = "rename";
+#else          /* for Linux or Mac */
+                        changeFileName = "mv";
+#endif
+                        cmd = changeFileName + " " + crxFile + " " + dFile;
+                        std::system(cmd.c_str());
+                        if (access(dFile.c_str(), 0) == -1)
+                        {
+                            cout << "*** WARNING(FtpUtil::GetDailyObsGa): failed to download GA daily observation file " << oFile << endl;
+
+                            continue;
+                        }
+
+#ifdef _WIN32  /* for Windows */
+                        cmd = crx2rnxFull + " " + dFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                        cmd = "cat " + dFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                        std::system(cmd.c_str());
+
+                        if (access(oFile.c_str(), 0) == 0)
+                        {
+                            cout << "*** INFO(FtpUtil::GetHourlyObsGa): successfully download GA hourly observation file " << oFile << endl;
+
+                            /* delete dFile */
+                            remove(dFile.c_str());
+                        }
+                    }
+                    else cout << "*** INFO(FtpUtil::GetHourlyObsGa): GA hourly observation file " <<
+                        oFile << " or " << dFile << " has existed!" << endl;
+                }
+            }
+
+            /* close 'site.list' */
+            sitLst.close();
+        }
+    }
+} /* end of GetHourlyObsMgex */
+
+/**
+* @brief   : GetHrObsGa - download Geoscience Australia (GA) RINEX high-rate observation (1s) files (long name "crx") according to 'site.list' file
+* @param[I]: ts (start time)
+* @param[I]: dir (data directory)
+* @param[I]: fopt (FTP options)
+* @param[O]: none
+* @return  : none
+* @note    :
+**/
+void FtpUtil::GetHrObsGa(gtime_t ts, const char dir[], const ftpopt_t *fopt)
+{
+    /* creation of sub-directory ('highrate') */
+    char tmpDir[MAXSTRPATH] = { '\0' };
+    char sep = (char)FILEPATHSEP;
+    sprintf(tmpDir, "%s%c%s", dir, sep, "highrate");
+    string subDir = tmpDir;
+    if (access(subDir.c_str(), 0) == -1)
+    {
+        /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+        string cmd = "mkdir " + subDir;
+#else           /* for Linux or Mac */
+        string cmd = "mkdir -p " + subDir;
+#endif
+        std::system(cmd.c_str());
+    }
+
+    /* compute day of year */
+    TimeUtil tu;
+    int yyyy, doy;
+    tu.time2yrdoy(ts, &yyyy, &doy);
+    int yy = tu.yyyy2yy(yyyy);
+    StringUtil str;
+    string sYyyy = str.yyyy2str(yyyy);
+    string sYy = str.yy2str(yy);
+    string sDoy = str.doy2str(doy);
+
+    string wgetFull = fopt->wgetFull, gzipFull = fopt->gzipFull, crx2rnxFull = fopt->crx2rnxFull, qr = fopt->qr;
+    string url0 = "ftp://ftp.data.gnss.ga.gov.au/highrate/" + sYyyy + "/" + sDoy;
+    string cutDirs = " --cut-dirs=4 ";
+    if (strlen(fopt->obgOpt) < 9)  /* the option of 'all' is selected; the length of "site.list" is nine */
+    {
+        /* download all the MGEX observation files */
+        for (int i = 0; i < fopt->hhObg.size(); i++)
+        {
+            string sHh = str.hh2str(fopt->hhObg[i]);
+            char tmpDir[MAXSTRPATH] = { '\0' };
+            char sep = (char)FILEPATHSEP;
+            sprintf(tmpDir, "%s%c%s", subDir.c_str(), sep, sHh.c_str());
+            string sHhDir = tmpDir;
+            if (access(sHhDir.c_str(), 0) == -1)
+            {
+                /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+                string cmd = "mkdir " + sHhDir;
+#else           /* for Linux or Mac */
+                string cmd = "mkdir -p " + sHhDir;
+#endif
+                std::system(cmd.c_str());
+            }
+
+            /* change directory */
+#ifdef _WIN32   /* for Windows */
+            _chdir(sHhDir.c_str());
+#else           /* for Linux or Mac */
+            chdir(sHhDir.c_str());
+#endif
+
+            string url = url0 + "/" + sHh;
+            /* it is OK for '*.gz' format */
+            string crxFile = "*_15M_01S_MO.crx";
+            string crxgzFile = crxFile + ".gz";
+            string cmd = wgetFull + " " + qr + " -nH -A " + crxgzFile + cutDirs + url;
+            std::system(cmd.c_str());
+
+            /* 'a' = 97, 'b' = 98, ... */
+            int ii = fopt->hhObg[i] + 97;
+            char ch = ii;
+            string sch;
+            sch.push_back(ch);
+
+            std::vector<string> minuStr = { "00", "15", "30", "45" };
+            for (int i = 0; i < minuStr.size(); i++)
+            {
+                /* get the file list */
+                string suffix = minuStr[i] + "_15M_01S_MO.crx";
+                vector<string> crxFiles;
+                str.GetFilesAll(sHhDir, suffix, crxFiles);
+                char sitName[MAXCHARS];
+                for (int j = 0; j < crxFiles.size(); j++)
+                {
+                    if (access(crxFiles[j].c_str(), 0) == 0)
+                    {
+                        /* extract it */
+                        cmd = gzipFull + " -d -f " + crxFiles[j];
+                        std::system(cmd.c_str());
+
+                        str.StrMid(sitName, crxFiles[j].c_str(), 0, 4);
+                        string site = sitName;
+                        str.ToLower(site);
+                        str.StrMid(sitName, crxFiles[j].c_str(), 0, (int)crxFiles[j].find_last_of('.'));
+                        crxFile = sitName;
+                        if (access(crxFile.c_str(), 0) == -1) continue;
+                        string oFile = site + sDoy + sch + minuStr[i] + "." + sYy + "o";
+                        /* convert from 'crx' file to 'o' file */
+#ifdef _WIN32  /* for Windows */
+                        cmd = crx2rnxFull + " " + crxFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                        cmd = "cat " + crxFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                        std::system(cmd.c_str());
+
+                        /* delete 'crx' file */
+#ifdef _WIN32   /* for Windows */
+                        cmd = "del " + crxFile;
+#else           /* for Linux or Mac */
+                        cmd = "rm -rf " + crxFile;
+#endif
+                        std::system(cmd.c_str());
+                    }
+                }
+            }
+        }
+    }
+    else  /* the option of full path of site list file is selected */
+    {
+        /* download the GA observation file site-by-site */
+        if (access(fopt->obgOpt, 0) == 0)
+        {
+            ifstream sitLst(fopt->obgOpt);
+            if (!sitLst.is_open())
+            {
+                cerr << "*** ERROR(FtpUtil::GetHrObsGa): open site.list = " << fopt->obgOpt << " file failed, please check it" << endl;
+
+                return;
+            }
+
+            string sitName;
+            while (getline(sitLst, sitName))
+            {
+                for (int i = 0; i < fopt->hhObg.size(); i++)
+                {
+                    string sHh = str.hh2str(fopt->hhObg[i]);
+                    char tmpDir[MAXSTRPATH] = { '\0' };
+                    char sep = (char)FILEPATHSEP;
+                    sprintf(tmpDir, "%s%c%s", subDir.c_str(), sep, sHh.c_str());
+                    string sHhDir = tmpDir;
+                    if (access(sHhDir.c_str(), 0) == -1)
+                    {
+                        /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+                        string cmd = "mkdir " + sHhDir;
+#else           /* for Linux or Mac */
+                        string cmd = "mkdir -p " + sHhDir;
+#endif
+                        std::system(cmd.c_str());
+                    }
+
+                    /* change directory */
+#ifdef _WIN32   /* for Windows */
+                    _chdir(sHhDir.c_str());
+#else           /* for Linux or Mac */
+                    chdir(sHhDir.c_str());
+#endif
+
+                    /* 'a' = 97, 'b' = 98, ... */
+                    int ii = fopt->hhObg[i] + 97;
+                    char ch = ii;
+                    string sch;
+                    sch.push_back(ch);
+
+                    string url = url0 + "/" + sHh;
+                    std::vector<string> minuStr = { "00", "15", "30", "45" };
+                    for (int i = 0; i < minuStr.size(); i++)
+                    {
+                        str.ToLower(sitName);
+                        string oFile = sitName + sDoy + sch + minuStr[i] + "." + sYy + "o";
+                        string dFile = sitName + sDoy + sch + minuStr[i] + "." + sYy + "d";
+                        if (access(oFile.c_str(), 0) == -1 && access(dFile.c_str(), 0) == -1)
+                        {
+                            /* it is OK for '*.gz' format */
+                            str.ToUpper(sitName);
+                            string crxFile = sitName + "*" + sYyyy + sDoy + sHh + minuStr[i] + "_15M_01S_MO.crx";
+                            string crxgzFile = crxFile + ".gz";
+                            string cmd = wgetFull + " " + qr + " -nH -A " + crxgzFile + cutDirs + url;
+                            std::system(cmd.c_str());
+
+                            /* extract '*.gz' */
+                            cmd = gzipFull + " -d -f " + crxgzFile;
+                            std::system(cmd.c_str());
+                            string changeFileName;
+#ifdef _WIN32  /* for Windows */
+                            changeFileName = "rename";
+#else          /* for Linux or Mac */
+                            changeFileName = "mv";
+#endif
+                            cmd = changeFileName + " " + crxFile + " " + dFile;
+                            std::system(cmd.c_str());
+                            if (access(dFile.c_str(), 0) == -1)
+                            {
+                                cout << "*** WARNING(FtpUtil::GetDailyObsGa): failed to download GA daily observation file " << oFile << endl;
+
+                                continue;
+                            }
+
+#ifdef _WIN32  /* for Windows */
+                            cmd = crx2rnxFull + " " + dFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                            cmd = "cat " + dFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                            std::system(cmd.c_str());
+
+                            if (access(oFile.c_str(), 0) == 0)
+                            {
+                                cout << "*** INFO(FtpUtil::GetHrObsGa): successfully download GA high-rate observation file " << oFile << endl;
+
+                                /* delete dFile */
+                                remove(dFile.c_str());
+                            }
+                        }
+                        else cout << "*** INFO(FtpUtil::GetHrObsGa): GA high-rate observation file " <<
+                            oFile << " or " << dFile << " has existed!" << endl;
+                    }
+                }
+            }
+
+            /* close 'site.list' */
+            sitLst.close();
+        }
+    }
+} /* end of GetHrObsGa */
+
+/**
+* @brief   : Get30sObsHk - download Hong Kong CORS RINEX daily observation (30s) files (long name "crx") according to 'site.list' file
+* @param[I]: ts (start time)
+* @param[I]: dir (data directory)
+* @param[I]: fopt (FTP options)
+* @param[O]: none
+* @return  : none
+* @note    :
+**/
+void FtpUtil::Get30sObsHk(gtime_t ts, const char dir[], const ftpopt_t *fopt)
+{
+    /* creation of sub-directory ('daily') */
+    char tmpDir[MAXSTRPATH] = { '\0' };
+    char sep = (char)FILEPATHSEP;
+    sprintf(tmpDir, "%s%c%s", dir, sep, "30s");
+    string subDir = tmpDir;
+    if (access(subDir.c_str(), 0) == -1)
+    {
+        /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+        string cmd = "mkdir " + subDir;
+#else           /* for Linux or Mac */
+        string cmd = "mkdir -p " + subDir;
+#endif
+        std::system(cmd.c_str());
+    }
+
+    /* change directory */
+#ifdef _WIN32   /* for Windows */
+    _chdir(subDir.c_str());
+#else           /* for Linux or Mac */
+    chdir(subDir.c_str());
+#endif
+
+    /* compute day of year */
+    TimeUtil tu;
+    int yyyy, doy;
+    tu.time2yrdoy(ts, &yyyy, &doy);
+    int yy = tu.yyyy2yy(yyyy);
+    StringUtil str;
+    string sYyyy = str.yyyy2str(yyyy);
+    string sYy = str.yy2str(yy);
+    string sDoy = str.doy2str(doy);
+
+    string wgetFull = fopt->wgetFull, gzipFull = fopt->gzipFull, crx2rnxFull = fopt->crx2rnxFull, qr = fopt->qr;
+    string url0 = "ftp://ftp.geodetic.gov.hk/rinex3/" + sYyyy + "/" + sDoy;
+    string cutDirs = " --cut-dirs=5 ";
+    /* download the Hong Kong CORS observation file site-by-site */
+    if (access(fopt->obhOpt, 0) == 0)
+    {
+        ifstream sitLst(fopt->obhOpt);
+        if (!sitLst.is_open())
+        {
+            cerr << "*** ERROR(FtpUtil::Get30sObsHk): open site.list = " << fopt->obhOpt << " file failed, please check it" << endl;
+
+            return;
+        }
+
+        string sitName;
+        while (getline(sitLst, sitName))
+        {
+            str.ToLower(sitName);
+            string oFile = sitName + sDoy + "0." + sYy + "o";
+            string url = url0 + "/" + sitName + "/30s";
+            if (access(oFile.c_str(), 0) == -1)
+            {
+                /* it is OK for '*.gz' format */
+                str.ToUpper(sitName);
+                string crxFile = sitName + "00HKG_R_" + sYyyy + sDoy + "0000_01D_30S_MO.crx";
+                string crxgzFile = crxFile + ".gz";
+                str.ToLower(sitName);
+                string cmd = wgetFull + " " + qr + " -nH " + cutDirs + url + "/" + crxgzFile;
+                std::system(cmd.c_str());
+
+                /* extract '*.gz' */
+                cmd = gzipFull + " -d -f " + crxgzFile;
+                std::system(cmd.c_str());
+                if (access(crxFile.c_str(), 0) == -1)
+                {
+                    cout << "*** WARNING(FtpUtil::Get30sObsHk): failed to download HK CORS 30s observation file " << oFile << endl;
+
+                    continue;
+                }
+
+#ifdef _WIN32  /* for Windows */
+                cmd = crx2rnxFull + " " + crxFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                cmd = "cat " + crxFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                std::system(cmd.c_str());
+
+                if (access(oFile.c_str(), 0) == 0)
+                {
+                    cout << "*** INFO(FtpUtil::Get30sObsHk): successfully download HK CORS 30s observation file " << oFile << endl;
+
+                    /* delete crxFile */
+                    remove(crxFile.c_str());
+                }
+            }
+            else cout << "*** INFO(FtpUtil::Get30sObsHk): HK CORS 30s observation file " << oFile <<
+                " has existed!" << endl;
+        }
+
+        /* close 'site.list' */
+        sitLst.close();
+    }
+} /* end of Get30sObsHk */
+
+/**
+* @brief   : Get5sObsHk - download Hong Kong CORS RINEX daily observation (5s) files (long name "crx") according to 'site.list' file
+* @param[I]: ts (start time)
+* @param[I]: dir (data directory)
+* @param[I]: fopt (FTP options)
+* @param[O]: none
+* @return  : none
+* @note    :
+**/
+void FtpUtil::Get5sObsHk(gtime_t ts, const char dir[], const ftpopt_t *fopt)
+{
+    /* creation of sub-directory ('daily') */
+    char tmpDir[MAXSTRPATH] = { '\0' };
+    char sep = (char)FILEPATHSEP;
+    sprintf(tmpDir, "%s%c%s", dir, sep, "5s");
+    string subDir = tmpDir;
+    if (access(subDir.c_str(), 0) == -1)
+    {
+        /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+        string cmd = "mkdir " + subDir;
+#else           /* for Linux or Mac */
+        string cmd = "mkdir -p " + subDir;
+#endif
+        std::system(cmd.c_str());
+    }
+
+    /* change directory */
+#ifdef _WIN32   /* for Windows */
+    _chdir(subDir.c_str());
+#else           /* for Linux or Mac */
+    chdir(subDir.c_str());
+#endif
+
+    /* compute day of year */
+    TimeUtil tu;
+    int yyyy, doy;
+    tu.time2yrdoy(ts, &yyyy, &doy);
+    int yy = tu.yyyy2yy(yyyy);
+    StringUtil str;
+    string sYyyy = str.yyyy2str(yyyy);
+    string sYy = str.yy2str(yy);
+    string sDoy = str.doy2str(doy);
+
+    string wgetFull = fopt->wgetFull, gzipFull = fopt->gzipFull, crx2rnxFull = fopt->crx2rnxFull, qr = fopt->qr;
+    string url0 = "ftp://ftp.geodetic.gov.hk/rinex3/" + sYyyy + "/" + sDoy;
+    string cutDirs = " --cut-dirs=5 ";
+    /* download the Hong Kong CORS observation file site-by-site */
+    if (access(fopt->obhOpt, 0) == 0)
+    {
+        ifstream sitLst(fopt->obhOpt);
+        if (!sitLst.is_open())
+        {
+            cerr << "*** ERROR(FtpUtil::Get5sObsHk): open site.list = " << fopt->obhOpt << " file failed, please check it" << endl;
+
+            return;
+        }
+
+        string sitName;
+        while (getline(sitLst, sitName))
+        {
+            for (int i = 0; i < fopt->hhObh.size(); i++)
+            {
+                string sHh = str.hh2str(fopt->hhObh[i]);
+                char tmpDir[MAXSTRPATH] = { '\0' };
+                char sep = (char)FILEPATHSEP;
+                sprintf(tmpDir, "%s%c%s", subDir.c_str(), sep, sHh.c_str());
+                string sHhDir = tmpDir;
+                if (access(sHhDir.c_str(), 0) == -1)
+                {
+                    /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+                    string cmd = "mkdir " + sHhDir;
+#else           /* for Linux or Mac */
+                    string cmd = "mkdir -p " + sHhDir;
+#endif
+                    std::system(cmd.c_str());
+                }
+
+                /* change directory */
+#ifdef _WIN32   /* for Windows */
+                _chdir(sHhDir.c_str());
+#else           /* for Linux or Mac */
+                chdir(sHhDir.c_str());
+#endif
+
+                /* 'a' = 97, 'b' = 98, ... */
+                int ii = fopt->hhObh[i] + 97;
+                char ch = ii;
+                string sch;
+                sch.push_back(ch);
+                str.ToLower(sitName);
+                string oFile = sitName + sDoy + sch + "." + sYy + "o";
+                string url = url0 + "/" + sitName + "/5s";
+                if (access(oFile.c_str(), 0) == -1)
+                {
+                    /* it is OK for '*.gz' format */
+                    str.ToUpper(sitName);
+                    string crxFile = sitName + "00HKG_R_" + sYyyy + sDoy + sHh + "00_01H_05S_MO.crx";
+                    string crxgzFile = crxFile + ".gz";
+                    str.ToLower(sitName);
+                    string cmd = wgetFull + " " + qr + " -nH " + cutDirs + url + "/" + crxgzFile;
+                    std::system(cmd.c_str());
+
+                    /* extract '*.gz' */
+                    cmd = gzipFull + " -d -f " + crxgzFile;
+                    std::system(cmd.c_str());
+                    if (access(crxFile.c_str(), 0) == -1)
+                    {
+                        cout << "*** WARNING(FtpUtil::Get5sObsHk): failed to download HK CORS 5s observation file " << oFile << endl;
+
+                        continue;
+                    }
+
+#ifdef _WIN32  /* for Windows */
+                    cmd = crx2rnxFull + " " + crxFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                    cmd = "cat " + crxFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                    std::system(cmd.c_str());
+
+                    if (access(oFile.c_str(), 0) == 0)
+                    {
+                        cout << "*** INFO(FtpUtil::Get5sObsHk): successfully download HK CORS 5s observation file " << oFile << endl;
+
+                        /* delete crxFile */
+                        remove(crxFile.c_str());
+                    }
+                }
+                else cout << "*** INFO(FtpUtil::Get5sObsHk): HK CORS 5s observation file " << oFile <<
+                    " has existed!" << endl;
+            }
+        }
+
+        /* close 'site.list' */
+        sitLst.close();
+    }
+} /* end of Get5sObsHk */
+
+/**
+* @brief   : Get1sObsHk - download Hong Kong CORS RINEX daily observation (1s) files (long name "crx") according to 'site.list' file
+* @param[I]: ts (start time)
+* @param[I]: dir (data directory)
+* @param[I]: fopt (FTP options)
+* @param[O]: none
+* @return  : none
+* @note    :
+**/
+void FtpUtil::Get1sObsHk(gtime_t ts, const char dir[], const ftpopt_t *fopt)
+{
+    /* creation of sub-directory ('daily') */
+    char tmpDir[MAXSTRPATH] = { '\0' };
+    char sep = (char)FILEPATHSEP;
+    sprintf(tmpDir, "%s%c%s", dir, sep, "1s");
+    string subDir = tmpDir;
+    if (access(subDir.c_str(), 0) == -1)
+    {
+        /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+        string cmd = "mkdir " + subDir;
+#else           /* for Linux or Mac */
+        string cmd = "mkdir -p " + subDir;
+#endif
+        std::system(cmd.c_str());
+    }
+
+    /* change directory */
+#ifdef _WIN32   /* for Windows */
+    _chdir(subDir.c_str());
+#else           /* for Linux or Mac */
+    chdir(subDir.c_str());
+#endif
+
+    /* compute day of year */
+    TimeUtil tu;
+    int yyyy, doy;
+    tu.time2yrdoy(ts, &yyyy, &doy);
+    int yy = tu.yyyy2yy(yyyy);
+    StringUtil str;
+    string sYyyy = str.yyyy2str(yyyy);
+    string sYy = str.yy2str(yy);
+    string sDoy = str.doy2str(doy);
+
+    string wgetFull = fopt->wgetFull, gzipFull = fopt->gzipFull, crx2rnxFull = fopt->crx2rnxFull, qr = fopt->qr;
+    string url0 = "ftp://ftp.geodetic.gov.hk/rinex3/" + sYyyy + "/" + sDoy;
+    string cutDirs = " --cut-dirs=5 ";
+    /* download the Hong Kong CORS observation file site-by-site */
+    if (access(fopt->obhOpt, 0) == 0)
+    {
+        ifstream sitLst(fopt->obhOpt);
+        if (!sitLst.is_open())
+        {
+            cerr << "*** ERROR(FtpUtil::Get1sObsHk): open site.list = " << fopt->obhOpt << " file failed, please check it" << endl;
+
+            return;
+        }
+
+        string sitName;
+        while (getline(sitLst, sitName))
+        {
+            for (int i = 0; i < fopt->hhObh.size(); i++)
+            {
+                string sHh = str.hh2str(fopt->hhObh[i]);
+                char tmpDir[MAXSTRPATH] = { '\0' };
+                char sep = (char)FILEPATHSEP;
+                sprintf(tmpDir, "%s%c%s", subDir.c_str(), sep, sHh.c_str());
+                string sHhDir = tmpDir;
+                if (access(sHhDir.c_str(), 0) == -1)
+                {
+                    /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+                    string cmd = "mkdir " + sHhDir;
+#else           /* for Linux or Mac */
+                    string cmd = "mkdir -p " + sHhDir;
+#endif
+                    std::system(cmd.c_str());
+                }
+
+                /* change directory */
+#ifdef _WIN32   /* for Windows */
+                _chdir(sHhDir.c_str());
+#else           /* for Linux or Mac */
+                chdir(sHhDir.c_str());
+#endif
+
+                /* 'a' = 97, 'b' = 98, ... */
+                int ii = fopt->hhObh[i] + 97;
+                char ch = ii;
+                string sch;
+                sch.push_back(ch);
+                str.ToLower(sitName);
+                string oFile = sitName + sDoy + sch + "." + sYy + "o";
+                string url = url0 + "/" + sitName + "/1s";
+                if (access(oFile.c_str(), 0) == -1)
+                {
+                    /* it is OK for '*.gz' format */
+                    str.ToUpper(sitName);
+                    string crxFile = sitName + "00HKG_R_" + sYyyy + sDoy + sHh + "00_01H_01S_MO.crx";
+                    string crxgzFile = crxFile + ".gz";
+                    str.ToLower(sitName);
+                    string cmd = wgetFull + " " + qr + " -nH " + cutDirs + url + "/" + crxgzFile;
+                    std::system(cmd.c_str());
+
+                    /* extract '*.gz' */
+                    cmd = gzipFull + " -d -f " + crxgzFile;
+                    std::system(cmd.c_str());
+                    if (access(crxFile.c_str(), 0) == -1)
+                    {
+                        cout << "*** WARNING(FtpUtil::Get1sObsHk): failed to download HK CORS 1s observation file " << oFile << endl;
+
+                        continue;
+                    }
+
+#ifdef _WIN32  /* for Windows */
+                    cmd = crx2rnxFull + " " + crxFile + " -f - > " + oFile;
+#else          /* for Linux or Mac */
+                    cmd = "cat " + crxFile + " | " + crx2rnxFull + " -f - > " + oFile;
+#endif
+                    std::system(cmd.c_str());
+
+                    if (access(oFile.c_str(), 0) == 0)
+                    {
+                        cout << "*** INFO(FtpUtil::Get1sObsHk): successfully download HK CORS 1s observation file " << oFile << endl;
+
+                        /* delete crxFile */
+                        remove(crxFile.c_str());
+                    }
+                }
+                else cout << "*** INFO(FtpUtil::Get1sObsHk): HK CORS 1s observation file " << oFile <<
+                    " has existed!" << endl;
+            }
+        }
+
+        /* close 'site.list' */
+        sitLst.close();
+    }
+} /* end of Get1sObsHk */
 
 /**
 * @brief   : GetNav - download daily GPS, GLONASS and mixed RINEX broadcast ephemeris files
@@ -3482,6 +4595,67 @@ void FtpUtil::FtpDownload(const prcopt_t *popt, ftpopt_t *fopt)
         if (strcmp(fopt->obmTyp, "daily") == 0) GetDailyObsMgex(popt->ts, popt->obmDir, fopt);
         else if (strcmp(fopt->obmTyp, "hourly") == 0) GetHourlyObsMgex(popt->ts, popt->obmDir, fopt);
         else if (strcmp(fopt->obmTyp, "highrate") == 0) GetHrObsMgex(popt->ts, popt->obmDir, fopt);
+    }
+
+    /* Curtin University of Technology (CUT) observation (long name 'crx') downloaded */
+    if (fopt->getObc)
+    {
+        /* If the directory does not exist, creat it */
+        if (access(popt->obcDir, 0) == -1)
+        {
+            string tmpDir = popt->obcDir;
+#ifdef _WIN32   /* for Windows */
+            string cmd = "mkdir " + tmpDir;
+#else           /* for Linux or Mac */
+            string cmd = "mkdir -p " + tmpDir;
+#endif
+            std::system(cmd.c_str());
+        }
+
+        if (strcmp(fopt->obcTyp, "daily") == 0) GetDailyObsCut(popt->ts, popt->obcDir, fopt);
+    }
+
+    /* Geoscience Australia (GA) observation (long name 'crx') downloaded */
+    if (fopt->getObg)
+    {
+        /* If the directory does not exist, creat it */
+        if (access(popt->obgDir, 0) == -1)
+        {
+            string tmpDir = popt->obgDir;
+#ifdef _WIN32   /* for Windows */
+            string cmd = "mkdir " + tmpDir;
+#else           /* for Linux or Mac */
+            string cmd = "mkdir -p " + tmpDir;
+#endif
+            std::system(cmd.c_str());
+        }
+
+        if (strcmp(fopt->obgTyp, "daily") == 0) GetDailyObsGa(popt->ts, popt->obgDir, fopt);
+        else if (strcmp(fopt->obgTyp, "hourly") == 0) GetHourlyObsGa(popt->ts, popt->obgDir, fopt);
+        else if (strcmp(fopt->obgTyp, "highrate") == 0) GetHrObsGa(popt->ts, popt->obgDir, fopt);
+    }
+
+    /* Hong Kong CORS observation (long name 'crx') downloaded */
+    if (fopt->getObh)
+    {
+        /* If the directory does not exist, creat it */
+        if (access(popt->obhDir, 0) == -1)
+        {
+            string tmpDir = popt->obhDir;
+#ifdef _WIN32   /* for Windows */
+            string cmd = "mkdir " + tmpDir;
+#else           /* for Linux or Mac */
+            string cmd = "mkdir -p " + tmpDir;
+#endif
+            std::system(cmd.c_str());
+        }
+
+        if (strcmp(fopt->obhTyp, "30s") == 0 || strcmp(fopt->obhTyp, "30 s") == 0)
+            Get30sObsHk(popt->ts, popt->obhDir, fopt);
+        else if (strcmp(fopt->obhTyp, "5s") == 0 || strcmp(fopt->obhTyp, "05s") == 0)
+            Get5sObsHk(popt->ts, popt->obhDir, fopt);
+        else if (strcmp(fopt->obhTyp, "1s") == 0 || strcmp(fopt->obhTyp, "01s") == 0)
+            Get1sObsHk(popt->ts, popt->obhDir, fopt);
     }
 
     /* broadcast ephemeris downloaded */

@@ -60,6 +60,17 @@ struct ftpopt_t
     char obmTyp[MAXCHARS];        /* 'daily', 'hourly', or 'highrate' */
     char obmOpt[MAXCHARS];        /* all; the full path of 'site.list' */
     std::vector<int> hhObm;       /* hours array (0: 00:00, 1: 1:00, 2: 2:00, 3: 3:00, ...) */
+    bool getObc;                  /* (0:off  1:on) Curtin University of Technology (CUT) observation (RINEX version 3.xx, long name 'crx') */
+    char obcTyp[MAXCHARS];        /* 'daily' */
+    char obcOpt[MAXCHARS];        /* all; the full path of 'site.list' */
+    bool getObg;                  /* (0:off  1:on) Geoscience Australia (GA) observation (RINEX version 3.xx, long name 'crx') */
+    char obgTyp[MAXCHARS];        /* 'daily', 'hourly', or 'highrate' */
+    char obgOpt[MAXCHARS];        /* all; the full path of 'site.list' */
+    std::vector<int> hhObg;       /* hours array (0: 00:00, 1: 1:00, 2: 2:00, 3: 3:00, ...) */
+    bool getObh;                  /* (0:off  1:on) Hong Kong CORS observation (RINEX version 3.xx, long name 'crx') */
+    char obhTyp[MAXCHARS];        /* 'daily' */
+    char obhOpt[MAXCHARS];        /* all; the full path of 'site.list' */
+    std::vector<int> hhObh;       /* hours array (0: 00:00, 1: 1:00, 2: 2:00, 3: 3:00, ...) */
     bool getNav;                  /* (0:off  1:on) broadcast ephemeris */
     char navTyp[MAXCHARS];        /* 'daily' or 'hourly' */
     char navOpt[MAXCHARS];        /* 'gps', 'glo', 'bds', 'gal', 'qzs', 'irn', 'mixed' or 'all' */
@@ -95,6 +106,9 @@ struct prcopt_t
     /* processing directory */
     char obsDir[MAXSTRPATH];      /* the directory of IGS RINEX format observation files (short name "d" files) */
     char obmDir[MAXSTRPATH];      /* the directory of MGEX RINEX format observation files (long name "crx" files) */
+    char obcDir[MAXSTRPATH];      /* the directory of Curtin University of Technology (CUT) RINEX format observation files (long name "crx" files) */
+    char obgDir[MAXSTRPATH];      /* the directory of Geoscience Australia (GA) RINEX format observation files (long name "crx" files) */
+    char obhDir[MAXSTRPATH];      /* the directory of Hong Kong CORS RINEX format observation files (long name "crx" files) */
     char navDir[MAXSTRPATH];      /* the directory of RINEX format broadcast ephemeris files */
     char sp3Dir[MAXSTRPATH];      /* the directory of SP3 format precise ephemeris files */
     char clkDir[MAXSTRPATH];      /* the directory of RINEX format precise clock files */

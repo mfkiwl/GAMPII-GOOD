@@ -38,6 +38,9 @@ void PreProcess::init(prcopt_t *popt, ftpopt_t *fopt)
     /* processing directory */
     str.SetStr(popt->obsDir, "", 1);             /* the directory of IGS RINEX format observation files (short name "d" files) */
     str.SetStr(popt->obmDir, "", 1);             /* the directory of MGEX RINEX format observation files (long name "crx" files) */
+    str.SetStr(popt->obcDir, "", 1);             /* the directory of Curtin University of Technology (CUT) RINEX format observation files (long name "crx" files) */
+    str.SetStr(popt->obgDir, "", 1);             /* the directory of Geoscience Australia (GA) RINEX format observation files (long name "crx" files) */
+    str.SetStr(popt->obhDir, "", 1);             /* the directory of Hong Kong CORS RINEX format observation files (long name "crx" files) */
     str.SetStr(popt->navDir, "", 1);             /* the directory of RINEX format broadcast ephemeris files */
     str.SetStr(popt->sp3Dir, "", 1);             /* the directory of SP3 format precise ephemeris files */
     str.SetStr(popt->clkDir, "", 1);             /* the directory of RINEX format precise clock files */
@@ -68,10 +71,19 @@ void PreProcess::init(prcopt_t *popt, ftpopt_t *fopt)
     str.SetStr(fopt->ftpFrom, "", 1);            /* FTP archive: CDDIS, IGN, or WHU */
     fopt->getObs = false;                        /* (0:off  1:on) IGS observation (RINEX version 2.xx, short name 'd') */
     fopt->getObm = false;                        /* (0:off  1:on) MGEX observation (RINEX version 3.xx, long name 'crx') */
+    fopt->getObc = false;                        /* (0:off  1:on) Curtin University of Technology (CUT) observation (RINEX version 3.xx, long name 'crx') */
+    fopt->getObg = false;                        /* (0:off  1:on) Geoscience Australia (GA) observation (RINEX version 3.xx, long name 'crx') */
+    fopt->getObh = false;                        /* (0:off  1:on) Hong Kong CORS observation (RINEX version 3.xx, long name 'crx') */
     str.SetStr(fopt->obsTyp, "", 1);             /* 'daily', 'hourly', or 'highrate' */
     str.SetStr(fopt->obmTyp, "", 1);             /* 'daily', 'hourly', or 'highrate' */
+    str.SetStr(fopt->obcTyp, "", 1);             /* 'daily' */
+    str.SetStr(fopt->obgTyp, "", 1);             /* 'daily', 'hourly', or 'highrate' */
+    str.SetStr(fopt->obhTyp, "", 1);             /* '30s', '5s', or '1s' */
     str.SetStr(fopt->obsOpt, "", 1);             /* all; the full path of 'site.list' */
     str.SetStr(fopt->obmOpt, "", 1);             /* all; the full path of 'site.list' */
+    str.SetStr(fopt->obcOpt, "", 1);             /* all; the full path of 'site.list' */
+    str.SetStr(fopt->obgOpt, "", 1);             /* all; the full path of 'site.list' */
+    str.SetStr(fopt->obhOpt, "", 1);             /* all; the full path of 'site.list' */
     fopt->getNav = false;                        /* (0:off  1:on) broadcast ephemeris */
     str.SetStr(fopt->navTyp, "", 1);             /* 'daily' or 'hourly' */
     str.SetStr(fopt->navOpt, "", 1);             /* 'gps', 'glo', 'bds', 'gal', 'qzs', 'irn', 'mixed' or 'all' */
@@ -139,6 +151,30 @@ bool PreProcess::ReadCfgFile(const char *cfgFile, prcopt_t *popt, ftpopt_t *fopt
             str.CutFilePathSep(tmpLine);
             strcpy(popt->obmDir, tmpLine);
             if (debug) cout << "* obmDir = " << popt->obmDir << endl;
+        }
+        else if (strstr(sline, "obcDir"))             /* the directory of Curtin University of Technology (CUT) RINEX format observation files (long name "crx" files) */
+        {
+            sscanf(p + 1, "%[^%]", tmpLine);          /* %[^%] denotes regular expression, which means that using % as the end sign of the input string */
+            str.TrimSpace(tmpLine);
+            str.CutFilePathSep(tmpLine);
+            strcpy(popt->obcDir, tmpLine);
+            if (debug) cout << "* obcDir = " << popt->obcDir << endl;
+        }
+        else if (strstr(sline, "obgDir"))             /* the directory of Geoscience Australia (GA) RINEX format observation files (long name "crx" files) */
+        {
+            sscanf(p + 1, "%[^%]", tmpLine);          /* %[^%] denotes regular expression, which means that using % as the end sign of the input string */
+            str.TrimSpace(tmpLine);
+            str.CutFilePathSep(tmpLine);
+            strcpy(popt->obgDir, tmpLine);
+            if (debug) cout << "* obgDir = " << popt->obgDir << endl;
+        }
+        else if (strstr(sline, "obhDir"))             /* the directory of Hong Kong CORS RINEX format observation files (long name "crx" files) */
+        {
+            sscanf(p + 1, "%[^%]", tmpLine);          /* %[^%] denotes regular expression, which means that using % as the end sign of the input string */
+            str.TrimSpace(tmpLine);
+            str.CutFilePathSep(tmpLine);
+            strcpy(popt->obhDir, tmpLine);
+            if (debug) cout << "* obhDir = " << popt->obhDir << endl;
         }
         else if (strstr(sline, "navDir"))             /* the directory of RINEX format broadcast ephemeris files */
         {
@@ -321,6 +357,30 @@ bool PreProcess::ReadCfgFile(const char *cfgFile, prcopt_t *popt, ftpopt_t *fopt
                         int imax = MIN(hh + nh, 24);
                         for (int i = hh; i < imax; i++) fopt->hhObm.push_back(i);
                     }
+                    else if (strstr(sline, "getObc")) /* (0:off  1:on) Curtin University of Technology (CUT) observation (RINEX version 3.xx, long name 'crx') */
+                    {
+                        sscanf(p + 1, "%d %s %s %d %d", &j, &fopt->obcTyp, &fopt->obcOpt, &hh, &nh);
+                        fopt->getObc = j == 1 ? true : false;
+                        if (debug) cout << "* getObc = " << fopt->getObc << "  " << fopt->obcTyp << "  " << fopt->obcOpt << endl;
+                    }
+                    else if (strstr(sline, "getObg")) /* (0:off  1:on) Geoscience Australia (GA) observation (RINEX version 3.xx, long name 'crx') */
+                    {
+                        sscanf(p + 1, "%d %s %s %d %d", &j, &fopt->obgTyp, &fopt->obgOpt, &hh, &nh);
+                        fopt->getObg = j == 1 ? true : false;
+                        if (debug) cout << "* getObg = " << fopt->getObg << "  " << fopt->obgTyp << "  " << fopt->obgOpt << endl;
+
+                        int imax = MIN(hh + nh, 24);
+                        for (int i = hh; i < imax; i++) fopt->hhObg.push_back(i);
+                    }
+                    else if (strstr(sline, "getObh")) /* (0:off  1:on) Hong Kong CORS observation (RINEX version 3.xx, long name 'crx') */
+                    {
+                        sscanf(p + 1, "%d %s %s %d %d", &j, &fopt->obhTyp, &fopt->obhOpt, &hh, &nh);
+                        fopt->getObh = j == 1 ? true : false;
+                        if (debug) cout << "* getObh = " << fopt->getObh << "  " << fopt->obhTyp << "  " << fopt->obhOpt << endl;
+
+                        int imax = MIN(hh + nh, 24);
+                        for (int i = hh; i < imax; i++) fopt->hhObh.push_back(i);
+                    }
                     else if (strstr(sline, "getNav")) /* (0:off  1:on) broadcast ephemeris */
                     {
                         sscanf(p + 1, "%d %s %s %d %d", &j, &fopt->navTyp, &fopt->navOpt, &hh, &nh);
@@ -452,6 +512,9 @@ void PreProcess::run(const char *cfgFile)
         StringUtil str;
         string obsDirMain = popt.obsDir;
         string obmDirMain = popt.obmDir;
+        string obcDirMain = popt.obcDir;
+        string obgDirMain = popt.obgDir;
+        string obhDirMain = popt.obhDir;
         string navDirMain = popt.navDir;
         string ztdDirMain = popt.ztdDir;
         for (int i = 0; i < popt.ndays; i++)
@@ -492,6 +555,72 @@ void PreProcess::run(const char *cfgFile)
                 str.TrimSpace(dir);
                 str.CutFilePathSep(dir);
                 strcpy(popt.obmDir, dir);
+                string tmpDir = dir;
+                if (access(tmpDir.c_str(), 0) == -1)
+                {
+                    /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+                    string cmd = "mkdir " + tmpDir;
+#else           /* for Linux or Mac */
+                    string cmd = "mkdir -p " + tmpDir;
+#endif
+                    std::system(cmd.c_str());
+                }
+            }
+
+            /* creat new Curtin University of Technology (CUT) observation sub-directory */
+            if (fopt.getObc)
+            {
+                char dir[MAXSTRPATH] = { '\0' };
+                char sep = (char)FILEPATHSEP;
+                sprintf(dir, "%s%c%s%c%s", obcDirMain.c_str(), sep, sYyyy.c_str(), sep, sDoy.c_str());
+                str.TrimSpace(dir);
+                str.CutFilePathSep(dir);
+                strcpy(popt.obcDir, dir);
+                string tmpDir = dir;
+                if (access(tmpDir.c_str(), 0) == -1)
+                {
+                    /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+                    string cmd = "mkdir " + tmpDir;
+#else           /* for Linux or Mac */
+                    string cmd = "mkdir -p " + tmpDir;
+#endif
+                    std::system(cmd.c_str());
+                }
+            }
+
+            /* creat new Geoscience Australia (GA) observation sub-directory */
+            if (fopt.getObg)
+            {
+                char dir[MAXSTRPATH] = { '\0' };
+                char sep = (char)FILEPATHSEP;
+                sprintf(dir, "%s%c%s%c%s", obgDirMain.c_str(), sep, sYyyy.c_str(), sep, sDoy.c_str());
+                str.TrimSpace(dir);
+                str.CutFilePathSep(dir);
+                strcpy(popt.obgDir, dir);
+                string tmpDir = dir;
+                if (access(tmpDir.c_str(), 0) == -1)
+                {
+                    /* If the directory does not exist, creat it */
+#ifdef _WIN32   /* for Windows */
+                    string cmd = "mkdir " + tmpDir;
+#else           /* for Linux or Mac */
+                    string cmd = "mkdir -p " + tmpDir;
+#endif
+                    std::system(cmd.c_str());
+                }
+            }
+
+            /* creat new Hong Kong CORS observation sub-directory */
+            if (fopt.getObh)
+            {
+                char dir[MAXSTRPATH] = { '\0' };
+                char sep = (char)FILEPATHSEP;
+                sprintf(dir, "%s%c%s%c%s", obhDirMain.c_str(), sep, sYyyy.c_str(), sep, sDoy.c_str());
+                str.TrimSpace(dir);
+                str.CutFilePathSep(dir);
+                strcpy(popt.obhDir, dir);
                 string tmpDir = dir;
                 if (access(tmpDir.c_str(), 0) == -1)
                 {
