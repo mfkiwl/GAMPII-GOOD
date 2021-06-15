@@ -17,7 +17,7 @@ Main feature of GAMP II - GOOD are various GNSS observations and products downlo
 - CODE and/or IGS tropospheric product
 - real-time precise orbit and clock products from CNES offline files
 - real-time code and phase bias products from CNES offline files
-- ANTEX format antenna phase center correction
+- ANTEX format antenna phase center correction  
 But it is not limited to these, users can use the source code to expand its functionalities according to their needs.
 # Version
 - Vers. 1.0  
